@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Places - TravelSite</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .place-image {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+    .place-card {
+      border: 1px solid #ccc;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      background-color: #f9f9f9;
+    }
+    .cart-section {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">🌍 TravelSite</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="register.html">Register</a>
+      <a href="login.html">Login</a>
+    </nav>
+  </header>
+
+  <main class="section">
+    <h2 id="city-heading">Places in </h2>
+    
+    <div id="place-list" class="places-container">
+      <!-- Places will be injected here -->
+    </div>
+
+    <div class="cart-section">
+      <h3>🛒 Your Cart</h3>
+      <ul id="cart-list"></ul>
+      <button onclick="goToCheckout()">Proceed to Checkout</button>
+    </div>
+  </main>
+
+  <script>
+    let cart = [];
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const city = urlParams.get("city");
+    document.getElementById("city-heading").innerText = `Places in ${city}`;
+
+    fetch(`http://localhost:5000/api/restaurants?city=${encodeURIComponent(city)}`)
+      .then(res => res.json())
+      .then(data => {
+        const placeList = document.getElementById("place-list");
+        data.forEach(place => {
+          const placeCard = document.createElement("div");
+          placeCard.className = "place-card";
+
+          // Use valid image or fallback
+          const imgSrc = (place.image && place.image.startsWith("http")) 
+                         ? place.image 
+                         : "https://via.placeholder.com/300x200?text=No+Image";
+
+          placeCard.innerHTML = `
+            <img src="${imgSrc}" alt="${place.name}" class="place-image"/>
+            <h4>${place.name}</h4>
+            <p>${place.details || "No details available."}</p>
+            <a href="${place.map}" target="_blank">📍 View on Map</a><br><br>
+            <button onclick='addToCart("${place.name}")'>Add to Cart</button>
+          `;
+          placeList.appendChild(placeCard);
+        });
+      });
+
+    function addToCart(placeName) {
+      if (!cart.includes(placeName)) {
+        cart.push(placeName);
+        const item = document.createElement("li");
+        item.textContent = placeName;
+        document.getElementById("cart-list").appendChild(item);
+      }
+    }
+
+    function goToCheckout() {
+      const loggedIn = localStorage.getItem("user");
+      if (!loggedIn) {
+        alert("Please login before checkout.");
+        window.location.href = "login.html";
+      } else {
+        alert("Checkout successful!");
+      }
+    }
+  </script>
+
+</body>
+</html>
